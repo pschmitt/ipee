@@ -95,3 +95,9 @@ case "$ACTION" in
 esac
 
 save
+    country)
+        test $SHORT && country_short || country
+        ;;
+esac
+
+save
