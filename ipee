@@ -1,12 +1,17 @@
 #/bin/sh
+# Description: Simple shell script that prints your current public IP
+# Version: 1.0
+# Author: Philipp Schmitt (philipp<at>schmitt.co)
+# Dependencies: sed curl geoip geoip-database
 
-HOME_COUNTRY_SHORT="FR"
+[[ -z $HOME_COUNTRY_SHORT ]] && HOME_COUNTRY_SHORT="FR"
+[[ -z $WARNING_ICON ]] && WARNING_ICON="/home/pschmitt/pictures/icons/xbm8x8/info_03.xbm"
 
-function usage() {
+usage() {
     echo "Usage: $1 [-a] [-c] [-s] [-h] [-d|f] [-k|n]"
-    echo "-a: Print all -> format: IP (COUNTRY)" 
-    echo "-c: Print country info" 
-    echo "-s: Print country info (short)" 
+    echo "-a: Print all -> format: IP (COUNTRY)"
+    echo "-c: Print country info"
+    echo "-s: Print country info (short)"
     echo "-k: Print conky formatted output (to be used with dzen2)"
     echo "-n: Print conky formatted output (warning disabled)"
     echo "-d: Use checkip.dyndns.org"
@@ -14,78 +19,73 @@ function usage() {
     echo "-h: Display this message"
 }
 
-function save() {
+save() {
     if test $IP; then
         [[ -z $XDG_CACHE_HOME ]] && local XDG_CACHE_HOME=~/.cache
         echo "$IP" > $XDG_CACHE_HOME/ip
     fi
 }
 
-function ip() {
+ip() {
     case "$PROVIDER" in
-        "dyn")
-            IP=$(ip_dyndns)
-            ;;
-        "ifcg")
-            IP=$(ip_ifconfig)
-            ;;
-        *)
-            IP=$(ip_ddg)
-            ;;
+        "dyn") IP=$(ip_dyndns) ;;
+        "ifcg") IP=$(ip_ifconfig) ;;
+        *) IP=$(ip_ddg) ;;
     esac
 }
 
-function _ip_error() {
-    echo -e "Couldn't get your IP !\nPlease check your network configuration. Otherwise, $1 may be down." >&2
+_ip_error() {
+    echo "Couldn't get your IP !" >&2
+    echo "Please check your network configuration. Otherwise, $1 may be down." >&2
     exit 2
 }
 
-function ip_dyndns() { 
+ip_dyndns() {
     if ! curl -s checkip.dyndns.org | sed -e 's/[^:]*: //' -e 's/<.*$//'; then
         _ip_error dyndns.org
     fi
 }
 
-function ip_ddg() { 
+ip_ddg() {
     if ! curl -s https://duckduckgo.com/ip | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}'; then
         _ip_error duckduckgo.com
     fi
 }
 
-function ip_ifconfig() { 
-    if ! curl -s http://ifconfig.me; then 
+ip_ifconfig() {
+    if ! curl -s http://ifconfig.me; then
         _ip_error duckduckgo.com
     fi
 }
 
-function country() {
+country() {
     geoiplookup $IP | awk '{ print $5 }'
 }
 
-function country_short() {
+country_short() {
     geoiplookup $IP | awk '{ print $4 }' | sed 's/\(.*\),/\1/'
 }
 
-function print_ip() {
+print_ip() {
     echo $IP
 }
 
-function print_short() {
-    echo "$(ip) ($(country_short))" 
+print_short() {
+    echo "$(ip) ($(country_short))"
 }
 
-function print_conky() {
+print_conky() {
     local country=$(country_short) country_color
     if [[ -z "$NOWARNING" ]]; then
         if [[ "$country" == "$HOME_COUNTRY_SHORT" ]]; then
             country_color="^fg(red)"
-            echo -n "$country_color^i(/home/pschmitt/pictures/icons/xbm8x8/info_03.xbm) "
+            echo -n "$country_color^i($WARNING_ICON) "
         fi
     fi
-    echo "^fg()$IP ($country_color$(country_short)^fg())" 
+    echo "^fg()$IP ($country_color$(country_short)^fg())"
 }
 
-function print_all() {
+print_all() {
     echo "$IP ($(country))"
 }
 
@@ -101,7 +101,7 @@ while getopts ':acdfnkhsw-' OPTION; do
             ACTION=country
             ;;
         d)
-            PROVIDER=dyn 
+            PROVIDER=dyn
             ;;
         f)
             PROVIDER=ifcg
@@ -123,7 +123,7 @@ while getopts ':acdfnkhsw-' OPTION; do
             ACTION=warn
             ;;
         ?)
-            echo -e "Unkown option -$OPTARG\n" >&2 
+            echo -e "Unkown option -$OPTARG\n" >&2
             usage $(basename $0)
             exit 1
             ;;
@@ -134,13 +134,13 @@ ip
 
 case "$ACTION" in
     default)
-        print_ip 
+        print_ip
         ;;
     all)
         test $SHORT && print_short || print_all
         ;;
     conky)
-        print_conky 
+        print_conky
         ;;
     country)
         test $SHORT && country_short || country
