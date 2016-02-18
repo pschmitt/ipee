@@ -30,7 +30,8 @@ ip() {
     case "$PROVIDER" in
         "dyn") IP=$(ip_dyndns) ;;
         "ifcg") IP=$(ip_ifconfig) ;;
-        *) IP=$(ip_ddg) ;;
+        "ddg") IP=$(ip_ddg) ;;
+        *) IP=$(ip_ifconfig) ;;
     esac
 }
 
@@ -56,7 +57,7 @@ ip_ddg() {
 
 ip_ifconfig() {
     if ! curl -s http://ifconfig.me; then
-        _ip_error ifconfig.me
+        _ip_error ifconfig.co
     fi
 }
 
