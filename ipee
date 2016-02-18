@@ -62,7 +62,7 @@ ip_ifconfig() {
 }
 
 country() {
-    geoiplookup "$IP" | awk '{ print $5 }'
+    geoiplookup "$IP" | sed -n 's/.*, \(.*\)/\1/p'
 }
 
 country_short() {
