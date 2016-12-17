@@ -23,7 +23,7 @@ usage() {
 }
 
 save() {
-    [[ -n "$IP" ]] && echo "$IP" > "${XDG_CACHE_HOME:-/tmp/.cache}/ip"
+    [[ -n "$IP" ]] && echo "$IP" > "${XDG_CACHE_HOME:-/tmp}/ipee"
 }
 
 ip() {
