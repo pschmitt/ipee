@@ -9,7 +9,7 @@
     WARNING_ICON="/home/pschmitt/pictures/icons/xbm8x8/info_03.xbm"
 
 usage() {
-    echo "Usage: $1 [-a|b] [-l] [-c|s] [-h] [-d|f] [-k|n]"
+    echo "Usage: $(basename "$0") [-a|b] [-l] [-c|s] [-h] [-d|f] [-k|n]"
     echo "-a: Print all -> format: IP (COUNTRY)"
     echo "-b: Print both -> format: IP (COUNTRY) - LOCAL_IP"
     echo "-l: Print local ip"
@@ -70,14 +70,15 @@ country_short() {
 }
 
 print_ip() {
-    echo $IP
+    echo "$IP"
 }
 
 print_local_ip() {
-    local default_nw_inft=$(routel | grep -m1 default | awk '{ print $NF }')
-    local local_ip=$(ip addr show "$default_nw_inft" | grep -m1 inet | \
-                     awk '{ print $2 }' | sed 's|\(.*\)/.*|\1|')
-    echo $local_ip
+    local default_nw_inft local_ip
+    default_nw_inft=$(routel | grep -m1 default | awk '{ print $NF }')
+    local_ip=$(ip addr show "$default_nw_inft" | grep -m1 inet | \
+               awk '{ print $2 }' | sed 's|\(.*\)/.*|\1|')
+    echo "$local_ip"
 }
 
 print_short() {
@@ -85,7 +86,8 @@ print_short() {
 }
 
 print_conky() {
-    local country=$(country_short) country_color
+    local country
+    country=$(country_short) country_color
     if [[ -z "$NOWARNING" ]]; then
         if [[ "$country" == "$HOME_COUNTRY_SHORT" ]]; then
             country_color="^fg(red)"
@@ -100,8 +102,9 @@ print_all() {
 }
 
 print_both() {
-    local wan=$(print_all)
-    echo $wan - $(print_local_ip)
+    local wan
+    wan=$(print_all)
+    echo "$wan - $(print_local_ip)"
 }
 
 ACTION=default
@@ -125,7 +128,7 @@ while getopts ':abcdflnkhsw-' OPTION; do
             PROVIDER=ifcg
             ;;
         h)
-            usage $(basename $0)
+            usage
             exit 0
             ;;
         l)
@@ -145,8 +148,8 @@ while getopts ':abcdflnkhsw-' OPTION; do
             ;;
         ?)
             echo -e "Unkown option -$OPTARG\n" >&2
-            usage $(basename $0)
-            exit 1
+            usage
+            exit 2
             ;;
     esac
 done
@@ -159,7 +162,12 @@ case "$ACTION" in
         print_ip
         ;;
     all)
-        test $SHORT && print_short || print_all
+        if [[ -n "$SHORT" ]]
+        then
+            print_short
+        else
+            print_all
+        fi
         ;;
     both)
         print_both
@@ -171,7 +179,12 @@ case "$ACTION" in
         print_conky
         ;;
     country)
-        test $SHORT && country_short || country
+        if [[ -n "$SHORT" ]]
+        then
+            country_short
+        else
+            country
+        fi
         ;;
 esac
 
